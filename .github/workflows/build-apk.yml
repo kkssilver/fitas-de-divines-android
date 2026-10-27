@@ -1,4 +1,3 @@
-
 name: Gerar APK - Fitas de Divines
 
 on:
@@ -16,28 +15,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar arquivos do repositorio
+      - name: Baixar arquivos
         uses: actions/checkout@v4
 
-      - name: Preparar Java
-        uses: actions/setup-java@v4
+      - name: Configurar Java
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Preparar Android SDK
+      - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
 
-      - name: Instalar componentes Android
-        run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Aceitar licenças e verificar SDK
+        run: yes | sdkmanager --licenses
 
       - name: Extrair projeto
         run: |
           unzip FitasDeDivines_Android_Project.zip -d buildsrc
-          find buildsrc -name build.gradle -print
+          test -f buildsrc/FitasDeDivines_Android/app/build.gradle
 
-      - name: Preparar Gradle
+      - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
@@ -47,7 +47,7 @@ jobs:
           cd buildsrc/FitasDeDivines_Android
           gradle assembleDebug
 
-      - name: Disponibilizar APK para download
+      - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
           name: FitasDeDivines-APK
