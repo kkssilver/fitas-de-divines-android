@@ -1,0 +1,55 @@
+
+name: Gerar APK - Fitas de Divines
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "FitasDeDivines_Android_Project.zip"
+      - ".github/workflows/build-apk.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar arquivos do repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar componentes Android
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Extrair projeto
+        run: |
+          unzip FitasDeDivines_Android_Project.zip -d buildsrc
+          find buildsrc -name build.gradle -print
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Compilar APK
+        run: |
+          cd buildsrc/FitasDeDivines_Android
+          gradle assembleDebug
+
+      - name: Disponibilizar APK para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: FitasDeDivines-APK
+          path: buildsrc/FitasDeDivines_Android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
